@@ -2,30 +2,97 @@
 <html>
 <body>
 <script type="text/javascript" src="jquery-1.5.2.min.js"></script>
-<style type="text/css">@import "jquery.svg.css";</style> 
 <script type="text/javascript" src="jquery.svg.min.js"></script>
 <script type="text/javascript" src="jquery.svgdom.min.js"></script>
 <style>
+	@import "jquery.svg.css";
+
 	@font-face{
 		font-family: Digital;
 		src: url(DigifaceRegular.ttf);
 	}
+	.sector{
+		/*stroke:white;
+		strokeWidth:1;*/
+	}
+	#time{
+		fill:#F5B800;
+	}
 
 	.inact{
-		fill:none;
+		fill:none !important;
 	}
-	.act{
+	.s{
+		fill:#C44F00;
+	}
+	.m{
+		fill:#E68F00;
+	}
+	.h{
 		fill:#F5B800;
+	}
+	.d{
+		fill:#FBF400;
+	}
+	.mo{
+		fill:#F7FF55;
 	}
 	body{
 		background-color:black;
 	}
+	#clk{
+		width:300px;
+		height:300px;
+	}
+	#settings, #openbut{
+		color:#F5B800;
+		border:1px solid #F5B800;
+	}
+	#settings{
+		width:200px;
+		display:none;
+	}
+	#openbut{
+		width:15px;
+		height:15px;
+		font-size:10px;
+		line-height:15px;
+		text-align:center;
+		cursor:pointer;
+	}
 </style>
 <script>
-var timesvg;
-var targetDate = new Date(2011, 6, 29, 20, 0, 0, 0);
+var targetDate = new Date(2011, 7, 3, 20, 50, 0, 0);
 
-function drawSegments(svg, parent,n,k,r1,r2,id){
+function azTimer(svg, func){
+	this.timesvg = svg;
+	this.fnCalc = func;
+	var size = Math.min(svg._svg.width.baseVal.value, svg._svg.height.baseVal.value);
+	var rad = Math.floor(size/2);
+	var space = rad * 0.015;
+	var wid = rad * 0.05;
+
+	var g = svg.group({transform:"translate("+rad+","+rad+")"});
+	rad *= 0.9;
+	//svg.circle(g, 0, 0, rad, {fill: 'none', stroke: 'red', strokeWidth: 1});
+
+	rad -= space;
+	this.drawSegments(svg, g, 60, 0.85, rad - wid, rad, 's');
+	rad -= wid + space;
+	this.drawSegments(svg, g, 60, 0.85, rad - wid, rad, 'm');
+	rad -= wid + space;
+	this.drawSegments(svg, g, 24, 0.9, rad - wid, rad, 'h');
+	rad -= wid + space;
+	this.drawSegments(svg, g, 31, 0.85, rad - wid, rad, 'd');
+	rad -= wid + space;
+	this.drawSegments(svg, g, 12, 0.93, rad - wid, rad, 'mo');
+
+	wid = rad * 0.25;
+	svg.text(g, 0, Math.floor(wid/2), "Yooo 1234", {fontFamily:"Digital", fontSize:wid, textAnchor:'middle', id:'time'});
+	$('#time', svg.root()).text('000 000000');
+}
+
+azTimer.prototype.drawSegments = function(svg, parent,n,k,r1,r2,id){
 	var i = 0;
 	while(i<n){
 		var a=2*Math.PI*i/n;
@@ -38,80 +105,107 @@ function drawSegments(svg, parent,n,k,r1,r2,id){
 				.arc(r1, r1, 0, 0, 0, (r1*Math.sin(a)), (-r1*Math.cos(a)))
 				.close()
 			,
-			{stroke:"black",strokeWidth:"1",class:'sector '+id, id:id+i, val:i}
+			{class:'sector '+id, id:id+i, val:i}
 		);
 		i++;
 	}
 }
 
-function fillSectors(id, num){
-	var circle = $('.sector', timesvg.root())
+azTimer.prototype.fillSectors = function(id, num){
+	var circle = $('.sector', this.timesvg.root())
 		.filter('.'+id);
 
 	circle.filter(':gt('+num+')')
 		.add(circle.filter(':eq('+num+')'))
-		.addClass('inact')
-		.removeClass('act');
+		.addClass('inact');
+//		.removeClass('act');
 	circle.filter(':lt('+num+'),')
-		.addClass('act')
+//		.addClass('act')
 		.removeClass('inact');
 }
 
-function setRest(msec){
+azTimer.prototype.setRest = function(msec){
 	var rest = Math.floor(msec / 1000);
 	var cur = rest % 60;
 	var text = ((cur<10)?'0':'') + cur;
-	fillSectors('s', cur);
+	this.fillSectors('s', cur);
 
 	rest = Math.floor(rest / 60);
 	cur = rest % 60;
 	text = ((cur<10)?'0':'') + cur + text;
-	fillSectors('m', cur);
+	this.fillSectors('m', cur);
 
 	rest = Math.floor(rest / 60);
 	cur = rest % 24;
 	text = ((cur<10)?' 0':' ') + cur + text;
-	fillSectors('h', cur);
+	this.fillSectors('h', cur);
 
 	rest = Math.floor(rest / 24);
 	cur = rest % 31;
 	text = ((cur<10)?'0':'') + cur + text;
-	fillSectors('d', cur);
+	this.fillSectors('d', cur);
 
 	rest = Math.floor(rest / 31);
 	text = '' + (rest % 31) + text;
-	fillSectors('mo', rest % 12);
+	this.fillSectors('mo', rest % 12);
 
-	$('#time', timesvg.root()).text(text);
-	setTimeout('updateTimer()', 1000);
+	$('#time', this.timesvg.root()).text(text);
 }
 
-function updateTimer(){
-	setRest(targetDate.getTime() - (new Date()).getTime());
+azTimer.prototype.updateTimer = function(){
+	this.setRest(this.fnCalc());
+}
+
+var azTimerCollection = {
+	timers:[],
+	addTimer:function(t){
+		azTimerCollection.timers.push(t);
+	},
+	updateTimers:function(){
+		for(i in azTimerCollection.timers){
+			azTimerCollection.timers[i].updateTimer();
+		}
+		setTimeout(azTimerCollection.updateTimers, 1000);
+	},
+	start:function(){
+		setTimeout(azTimerCollection.updateTimers, 1000);
+	},
+	
+	getFuncToTime:function(dt){
+		return function(){
+			return dt.getTime() - (new Date()).getTime();
+		}
+	},
+	getFuncTotalTime:function(lng){
+		var target = (new Date()).getTime() + lng;
+		return function(){
+			return target - (new Date()).getTime();
+		}
+	}
 }
 
 $(function(){
 	$('#clk').svg(function(svg){
-		timesvg = svg;
-		var g = svg.group({transform:"translate(250,250)"});
-		svg.circle(g, 0, 0, 200, {fill: 'none', stroke: 'black', strokeWidth: 1});
-
-		drawSegments(svg, g, 60, 0.85, 187, 197, 's');
-		drawSegments(svg, g, 60, 0.85, 174, 184, 'm');
-		drawSegments(svg, g, 24, 0.9, 161, 171, 'h');
-		drawSegments(svg, g, 31, 0.85, 148, 158, 'd');
-		drawSegments(svg, g, 12, 0.93, 135, 145, 'mo');
-
-		svg.text(g, 0, 25, "Yooo 1234", {fontFamily:"Digital", fontSize:50, textAnchor:'middle', class:'act', id:'time'});
-		$('.sector', svg.root()).addClass('act');
-		$('#time', svg.root()).text('000 000000');
-
-		setTimeout('updateTimer()', 1000);
+		azTimerCollection.addTimer(new azTimer(svg, azTimerCollection.getFuncToTime(targetDate)));
+		//azTimerCollection.addTimer(new azTimer(svg, azTimerCollection.getFuncTotalTime(60000)));
+	});
+	azTimerCollection.start();
+	$('#openbut').toggle(function(){
+		$(this).html('-');
+		$('#settings').show('fast');
+	},function(){
+		$(this).html('+');
+		$('#settings').hide('fast');
 	});
 });
 </script>
 
 <div id="clk"></div>
+
+<div id="openbut">+</div>
+<div id="settings">
+	<input type="text" id="thours"/>
+</div>
 
 </body>
 </html>
