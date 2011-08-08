@@ -3,8 +3,11 @@
 <body>
 <script type="text/javascript" src="jquery-1.5.2.min.js"></script>
 <script type="text/javascript" src="jquery.svg.min.js"></script>
+<script type="text/javascript" src="jquery-ui-1.8.15.custom.min.js"></script>
 <script type="text/javascript" src="jquery.svgdom.min.js"></script>
+
 <style>
+	@import "css/jquery.ui.all.css";
 	@import "jquery.svg.css";
 
 	@font-face{
@@ -23,7 +26,7 @@
 		fill:none !important;
 	}
 	.s{
-		fill:#C44F00;
+		fill:#A42F00;
 	}
 	.m{
 		fill:#E68F00;
@@ -41,8 +44,8 @@
 		background-color:black;
 	}
 	#clk{
-		width:300px;
-		height:300px;
+		width:700px;
+		height:700px;
 	}
 	#settings, #openbut{
 		color:#F5B800;
@@ -62,7 +65,7 @@
 	}
 </style>
 <script>
-var targetDate = new Date(2011, 7, 3, 20, 50, 0, 0);
+var targetDate = new Date(2011, 7, 8, 23, 38, 0, 0);
 
 function azTimer(svg, func){
 	this.timesvg = svg;
@@ -158,17 +161,24 @@ azTimer.prototype.updateTimer = function(){
 
 var azTimerCollection = {
 	timers:[],
+	started:false,
+
 	addTimer:function(t){
 		azTimerCollection.timers.push(t);
 	},
 	updateTimers:function(){
+		if(!azTimerCollection.started) return;
 		for(i in azTimerCollection.timers){
 			azTimerCollection.timers[i].updateTimer();
 		}
 		setTimeout(azTimerCollection.updateTimers, 1000);
 	},
 	start:function(){
-		setTimeout(azTimerCollection.updateTimers, 1000);
+		azTimerCollection.started = true;
+		azTimerCollection.updateTimers();
+	},
+	stop:function(){
+		azTimerCollection.started = false;
 	},
 	
 	getFuncToTime:function(dt){
@@ -186,7 +196,7 @@ var azTimerCollection = {
 
 $(function(){
 	$('#clk').svg(function(svg){
-		azTimerCollection.addTimer(new azTimer(svg, azTimerCollection.getFuncToTime(targetDate)));
+		//azTimerCollection.addTimer(new azTimer(svg, azTimerCollection.getFuncToTime(targetDate)));
 		//azTimerCollection.addTimer(new azTimer(svg, azTimerCollection.getFuncTotalTime(60000)));
 	});
 	azTimerCollection.start();
@@ -197,6 +207,16 @@ $(function(){
 		$(this).html('+');
 		$('#settings').hide('fast');
 	});
+	$('#tdate').datepicker({dateFormat:'dd.mm.yy'});
+	$('#btStart').click(function(){
+		azTimerCollection.stop();
+		var dat = $('#tdate').datepicker('getDate');
+		if(dat == null) return;
+		dat.setHours($('#thour').val());
+		dat.setMinutes($('#tmin').val());
+		azTimerCollection.addTimer(new azTimer($('#clk').svg('get'), azTimerCollection.getFuncToTime(dat)));
+		azTimerCollection.start();
+	});
 });
 </script>
 
@@ -204,7 +224,12 @@ $(function(){
 
 <div id="openbut">+</div>
 <div id="settings">
-	<input type="text" id="thours"/>
+	<input type="text" id="tdate" style="width:100px;"/>
+	<br />
+	<input type="text" id="thour" style="width:40px;"/>
+	:
+	<input type="text" id="tmin" style="width:40px;"/>
+	<button id="btStart">Start</button>
 </div>
 
 </body>
