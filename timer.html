@@ -93,6 +93,7 @@ function azTimer(svg, func){
 	wid = rad * 0.25;
 	svg.text(g, 0, Math.floor(wid/2), "Yooo 1234", {fontFamily:"Digital", fontSize:wid, textAnchor:'middle', id:'time'});
 	$('#time', svg.root()).text('000 000000');
+	this.notified = false;
 }
 
 azTimer.prototype.drawSegments = function(svg, parent,n,k,r1,r2,id){
@@ -156,7 +157,15 @@ azTimer.prototype.setRest = function(msec){
 }
 
 azTimer.prototype.updateTimer = function(){
-	this.setRest(this.fnCalc());
+	var rest = this.fnCalc();
+	if(rest > 0){
+		this.setRest(rest);
+	} else if (!this.notified) {
+		if (window.webkitNotifications) {
+			window.webkitNotifications.createNotification(null, 'Timer is 0 now!', 'Webtimer came to its zero point.').show();
+		}
+		this.notified = true;
+	}
 }
 
 var azTimerCollection = {
@@ -209,6 +218,10 @@ $(function(){
 	});
 	$('#tdate').datepicker({dateFormat:'dd.mm.yy'});
 	$('#btStart').click(function(){
+		if (window.webkitNotifications.checkPermission() != 0) {
+			window.webkitNotifications.requestPermission();
+		}
+
 		azTimerCollection.stop();
 		var dat = $('#tdate').datepicker('getDate');
 		if(dat == null) return;
@@ -216,6 +229,7 @@ $(function(){
 		dat.setMinutes($('#tmin').val());
 		azTimerCollection.addTimer(new azTimer($('#clk').svg('get'), azTimerCollection.getFuncToTime(dat)));
 		azTimerCollection.start();
+		$('#openbut').click();
 	});
 });
 </script>
