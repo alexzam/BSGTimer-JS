@@ -13,7 +13,7 @@
 		/*stroke:white;
 		strokeWidth:1;*/
 	}
-	#time{
+	.text{
 		fill:#F5B800;
 	}
 
@@ -60,7 +60,7 @@
 	}
 </style>
 <script>
-var targetDate = new Date(2011, 7, 8, 23, 38, 0, 0);
+var targetDate = new Date(2011, 8, 8, 21, 0, 0, 0);
 
 Ext.onReady(function(){
 Ext.create('Ext.container.Viewport', {
@@ -68,53 +68,25 @@ Ext.create('Ext.container.Viewport', {
 		{
 			xtype: 'aztimer',
                         width:300,
-			height:300
+			height:300,
+                        id:'t1',
+                        timeFunc: 'timer',
+                        timeFuncParam: 600000,
+                        name:'ten minutes'
+		},
+{
+			xtype: 'aztimer',
+                        width:300,
+			height:300,
+                        id:'t2',
+                        timeFunc: 'totime',
+                        timeFuncParam: targetDate,
+                        name:'end of day'
 		}
 	]
 });
 });
-/*
-$(function(){
-	$('#clk').svg(function(svg){
-		//azTimerCollection.addTimer(new azTimer(svg, azTimerCollection.getFuncToTime(targetDate)));
-		//azTimerCollection.addTimer(new azTimer(svg, azTimerCollection.getFuncTotalTime(60000)));
-	});
-	azTimerCollection.start();
-	$('#openbut').toggle(function(){
-		$(this).html('-');
-		$('#settings').show('fast');
-	},function(){
-		$(this).html('+');
-		$('#settings').hide('fast');
-	});
-	$('#tdate').datepicker({dateFormat:'dd.mm.yy'});
-	$('#btStart').click(function(){
-		if (window.webkitNotifications.checkPermission() != 0) {
-			window.webkitNotifications.requestPermission();
-		}
-
-		azTimerCollection.stop();
-		var dat = $('#tdate').datepicker('getDate');
-		if(dat == null) return;
-		dat.setHours($('#thour').val());
-		dat.setMinutes($('#tmin').val());
-		azTimerCollection.addTimer(new azTimer($('#clk').svg('get'), azTimerCollection.getFuncToTime(dat)));
-		azTimerCollection.start();
-		$('#openbut').click();
-	});
-});*/
 </script>
-
-
-<!--div id="openbut">+</div>
-<div id="settings">
-	<input type="text" id="tdate" style="width:100px;"/>
-	<br />
-	<input type="text" id="thour" style="width:40px;"/>
-	:
-	<input type="text" id="tmin" style="width:40px;"/>
-	<button id="btStart">Start</button>
-</div-->
 
 </body>
 </html>

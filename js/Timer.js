@@ -4,16 +4,37 @@ Ext.define('alexzam.comp.Timer', {
 
     viewBox: false,
     autoRender:true,
-    
+
+    fnCalc: null,
     drawn:false,
+    notified: false,
+    running: false,
+
+    config:{
+        autoRun:true,
+        name: ''
+    },
 
     constructor: function (config) {
         this.callParent(arguments);
+        this.initConfig(config);
 
         this.on('afterrender', function(){
             if(this.drawn) return false;
             this.drawn = true;
 
+            this.initGraphic();
+            alexzam.comp.TimerManager.registerTimer(this);
+        });
+        this.notified = false;
+        if(Ext.isString(this.config.timeFunc)) this.fnCalc = this.getTimeFuncByName(this.config.timeFunc, this.config.timeFuncParam);
+        else this.fnCalc = this.config.timeFunc;
+        this.running = this.config.autoRun;
+    
+        return this;
+    },
+
+    initGraphic:function(){
             var size = Math.min(this.getWidth(), this.getHeight());
             var rad = Math.floor(size/2);
             var space = rad * 0.015;
@@ -33,14 +54,32 @@ Ext.define('alexzam.comp.Timer', {
 
    	    rad -= space;
 	    this.drawSegments(60, 0.85, rad - wid, rad, 's');
+   	    rad -= wid + space;
+	    this.drawSegments(60, 0.85, rad - wid, rad, 'm');
+	    rad -= wid + space;
+	    this.drawSegments(24, 0.9, rad - wid, rad, 'h');
+	    rad -= wid + space;
+	    this.drawSegments(31, 0.85, rad - wid, rad, 'd');
+	    rad -= wid + space;
+	    this.drawSegments(12, 0.93, rad - wid, rad, 'mo');
+
+            wid = rad * 0.25;
+	    var text = this.surface.add({
+                type: 'text',
+                x: 0,
+                y: Math.floor(wid/2),
+                text: "000 000000",
+                font: ''+wid+" Digital",
+                group: ['all', 'time']
+            });
+            this.surface.render(text);
+            text.setAttributes({'text-anchor': 'middle'}, true);
+            text.addCls('text');
 
  	    this.surface.getGroup('all').setAttributes({
                 translate: trans
             }, false);
             this.surface.renderAll(); 
-        });
-    
-        return this;
     },
 
     drawSegments: function(n,k,r1,r2,id){
@@ -51,88 +90,30 @@ Ext.define('alexzam.comp.Timer', {
                 
 		var path = [
                     ['M',r2*Math.sin(a), -r2*Math.cos(a)],
-                    ['a',r2, r2, 0, 0, 1, (r2*Math.sin(b)), (-r2*Math.cos(b))],
-                    ['l',(r1*Math.sin(b)), (-r1*Math.cos(b))],
-                    ['a',r1, r1, 0, 0, 0, (r1*Math.sin(a)), (-r1*Math.cos(a))],
+                    ['A',r2, r2, 0, 0, 1, (r2*Math.sin(b)), (-r2*Math.cos(b))],
+                    ['L',(r1*Math.sin(b)), (-r1*Math.cos(b))],
+                    ['A',r1, r1, 0, 0, 0, (r1*Math.sin(a)), (-r1*Math.cos(a))],
                     ['z']
                 ];
-		this.surface.add({
+		var sector = this.surface.add({
                     type: 'path',
                     path: path,
-                    class:'sector '+id,
-                    id:id+i,
-                    val:i,
-                    group:'all', stroke:'#ff3333'
+                    group:['all',id]
                 });
+                this.surface.render(sector);
+                sector.addCls(['sector', id]);
 		i++;
 	}
-    }
-});
+    },
 
-/*
-function azTimer(svg, func){
-	this.timesvg = svg;
-	this.fnCalc = func;
+    fillSectors: function(id, num){
+        this.surface.getGroup(id).each(function(spr, i){
+            if(i >= num)spr.addCls('inact');
+            else spr.removeCls('inact');
+        });
+    },
 
-	var size = Math.min(svg._svg.width.baseVal.value, svg._svg.height.baseVal.value);
-	var rad = Math.floor(size/2);
-	var space = rad * 0.015;
-	var wid = rad * 0.05;
-
-	var g = svg.group({transform:"translate("+rad+","+rad+")"});
-	rad *= 0.9;
-	//svg.circle(g, 0, 0, rad, {fill: 'none', stroke: 'red', strokeWidth: 1});
-
-	rad -= space;
-	this.drawSegments(svg, g, 60, 0.85, rad - wid, rad, 's');
-	rad -= wid + space;
-	this.drawSegments(svg, g, 60, 0.85, rad - wid, rad, 'm');
-	rad -= wid + space;
-	this.drawSegments(svg, g, 24, 0.9, rad - wid, rad, 'h');
-	rad -= wid + space;
-	this.drawSegments(svg, g, 31, 0.85, rad - wid, rad, 'd');
-	rad -= wid + space;
-	this.drawSegments(svg, g, 12, 0.93, rad - wid, rad, 'mo');
-
-	wid = rad * 0.25;
-	svg.text(g, 0, Math.floor(wid/2), "Yooo 1234", {fontFamily:"Digital", fontSize:wid, textAnchor:'middle', id:'time'});
-	$('#time', svg.root()).text('000 000000');
-	this.notified = false;
-}
-
-azTimer.prototype.drawSegments = function(svg, parent,n,k,r1,r2,id){
-	var i = 0;
-	while(i<n){
-		var a=2*Math.PI*i/n;
-		var b=2*Math.PI*(i+k)/n;
-		var path = svg.createPath();
-		svg.path(parent,
-			path.move((r2*Math.sin(a)), (-r2*Math.cos(a)))
-				.arc(r2, r2, 0, 0, 1, (r2*Math.sin(b)), (-r2*Math.cos(b)))
-				.line((r1*Math.sin(b)), (-r1*Math.cos(b)))
-				.arc(r1, r1, 0, 0, 0, (r1*Math.sin(a)), (-r1*Math.cos(a)))
-				.close()
-			,
-			{class:'sector '+id, id:id+i, val:i}
-		);
-		i++;
-	}
-}
-
-azTimer.prototype.fillSectors = function(id, num){
-	var circle = $('.sector', this.timesvg.root())
-		.filter('.'+id);
-
-	circle.filter(':gt('+num+')')
-		.add(circle.filter(':eq('+num+')'))
-		.addClass('inact');
-//		.removeClass('act');
-	circle.filter(':lt('+num+'),')
-//		.addClass('act')
-		.removeClass('inact');
-}
-
-azTimer.prototype.setRest = function(msec){
+    setRest: function(msec){
 	var rest = Math.floor(msec / 1000);
 	var cur = rest % 60;
 	var text = ((cur<10)?'0':'') + cur;
@@ -157,54 +138,70 @@ azTimer.prototype.setRest = function(msec){
 	text = '' + (rest % 31) + text;
 	this.fillSectors('mo', rest % 12);
 
-	$('#time', this.timesvg.root()).text(text);
-}
+	this.surface.getGroup('time').getAt(0).setAttributes({text:text}, true);
+    },
 
-azTimer.prototype.updateTimer = function(){
+    updateTimer: function(){
+        if(!this.running) return;
 	var rest = this.fnCalc();
 	if(rest > 0){
-		this.setRest(rest);
+	    this.setRest(rest);
 	} else if (!this.notified) {
-		if (window.webkitNotifications) {
-			window.webkitNotifications.createNotification(null, 'Timer is 0 now!', 'Webtimer came to its zero point.').show();
-		}
-		this.notified = true;
+            this.running = false;
+	    if (window.webkitNotifications) {
+	        window.webkitNotifications.createNotification(null, 'Timer has finished!', 'Timer '+this.config.name+' came to its zero point.').show();
+	    }
+	    this.notified = true;
 	}
-}
+    },
 
-var azTimerCollection = {
-	timers:[],
-	started:false,
+    getTimeFuncByName: function(name, param){
+        switch(name){
+            case "totime":
+                return this.getFuncToTime(param);
+            case "timer":
+                return this.getFuncTotalTime(param);
+        }
+        return null;
+    },
 
-	addTimer:function(t){
-		azTimerCollection.timers.push(t);
-	},
-	updateTimers:function(){
-		if(!azTimerCollection.started) return;
-		for(i in azTimerCollection.timers){
-			azTimerCollection.timers[i].updateTimer();
-		}
-		setTimeout(azTimerCollection.updateTimers, 1000);
-	},
-	start:function(){
-		azTimerCollection.started = true;
-		azTimerCollection.updateTimers();
-	},
-	stop:function(){
-		azTimerCollection.started = false;
-	},
-	
-	getFuncToTime:function(dt){
-		return function(){
-			return dt.getTime() - (new Date()).getTime();
-		}
-	},
-	getFuncTotalTime:function(lng){
-		var target = (new Date()).getTime() + lng;
-		return function(){
-			return target - (new Date()).getTime();
-		}
+    getFuncToTime:function(dt){
+        return function(){
+            return dt.getTime() - (new Date()).getTime();
+        }
+    },
+    getFuncTotalTime:function(lng){
+        var target = (new Date()).getTime() + lng;
+        return function(){
+            return target - (new Date()).getTime();
+        }
+    }
+});
+
+Ext.define('alexzam.comp.TimerManager', {
+    singleton: true,
+
+    timers: [],
+    running: false,
+
+    registerTimer: function(timer){
+        if(!Ext.Array.contains(alexzam.comp.TimerManager.timers, timer)) alexzam.comp.TimerManager.timers.push(timer);
+        if(!alexzam.comp.TimerManager.running && timer.running) {
+            alexzam.comp.TimerManager.running = true;
+            alexzam.comp.TimerManager.updateTimers();
+        }
+    },
+
+    removeTimer: function(timer){
+        Ext.Array.remove(alexzam.comp.TimerManager.timers, timer);
+    },
+
+    updateTimers:function(){
+        if(!alexzam.comp.TimerManager.running) return;
+	for(i in alexzam.comp.TimerManager.timers){
+	    alexzam.comp.TimerManager.timers[i].updateTimer();
 	}
-}
+	setTimeout(alexzam.comp.TimerManager.updateTimers, 1000);
+    }
 
-*/
+});
