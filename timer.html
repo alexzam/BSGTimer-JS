@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <body>
+<link rel="stylesheet" type="text/css" href="js/resources/css/ext-all-access.css">
 <script type="text/javascript" src="js/ext-all-debug-w-comments.js"></script>
 <script type="text/javascript" src="js/Timer.js"></script>
 
@@ -35,7 +36,7 @@
 	.mo{
 		fill:#F7FF55;
 	}
-	body{
+	.ground .x-panel-body{
 		background-color:black;
 	}
 	#clk{
@@ -60,32 +61,114 @@
 	}
 </style>
 <script>
-var targetDate = new Date(2011, 8, 8, 21, 0, 0, 0);
+var targetDate = new Date(2011, 8, 14, 20, 00, 0, 0);
+var targetDate2 = new Date(2011, 8, 14, 15, 30, 0, 0);
+
+var manager = {
+	onBtAdd:function(){
+		var form = Ext.getCmp('frmAdd');
+		var data = form.getForm().getFieldValues();
+
+		var dat = data.newdate;
+		dat.setHours(data.newtime.getHours());
+		dat.setMinutes(data.newtime.getMinutes());
+
+		var newt = Ext.create('alexzam.comp.Timer', {
+                        width:300,
+			height:300,
+		        timeFunc: 'totime',
+                        timeFuncParam: dat,
+		        name:'sometimer'
+		});
+		Ext.getCmp('ground').add(newt);
+	}
+};
 
 Ext.onReady(function(){
 Ext.create('Ext.container.Viewport', {
+    layout: 'border',
 	items:[
 		{
-			xtype: 'aztimer',
-                        width:300,
-			height:300,
-                        id:'t1',
-                        timeFunc: 'timer',
-                        timeFuncParam: 600000,
-                        name:'ten minutes'
+			xtype: 'form',
+			region: 'east',
+			width: 100,
+			collapsible:true,
+			title: 'Add',
+			margins: '5 5 5 5',
+			id:'frmAdd',
+                        items: [
+				{
+					xtype:'radiogroup',
+					fieldLabel:'Type',
+					vertical:true,
+                                        anchor:'100%',
+					columns:[1.0],
+					labelAlign:'top',
+					items:[
+						{boxLabel:'To time', name:'typ', inputValue:'tt', checked:true},
+						{boxLabel:'Timer', name:'typ', inputValue:'ti'}
+					]
+				},
+				{
+					xtype:'datefield',
+					name:'newdate',
+					fieldLabel:'Time',
+					labelAlign:'top',
+					minValue:new Date(),
+					value:new Date(),
+					anchor:'100%',
+					format:'d.m.Y'
+				},
+				{
+					xtype: 'timefield',
+					name: 'newtime',
+					hideLabel: true,
+					increment: 30,
+					anchor: '100%',
+					format:'H:i'
+				},
+				{
+					xtype:'button',
+					text:'Add',
+					anchor: '100%',
+					handler:manager.onBtAdd
+				}
+			]
 		},
-{
-			xtype: 'aztimer',
-                        width:300,
-			height:300,
-                        id:'t2',
-                        timeFunc: 'totime',
-                        timeFuncParam: targetDate,
-                        name:'end of day'
+		{
+			xtype: 'panel',
+			region: 'center',
+                        cls:'ground',
+			id:'ground',
+                        border:false,
+			items: [
+				{
+					xtype: 'aztimer',
+                		        width:300,
+					height:300,
+                		        id:'t1',
+		                        timeFunc: 'totime',
+                		        timeFuncParam: targetDate,
+		                        name:'ten minutes'
+				},
+				{
+					xtype: 'aztimer',
+                		        width:300,
+					height:300,
+                		        id:'t2',
+		                        timeFunc: 'totime',
+                		        timeFuncParam: targetDate2,
+		                        name:'end of day'
+				}
+
+			]
 		}
 	]
 });
 });
+
+/*
+*/
 </script>
 
 </body>
