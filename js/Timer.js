@@ -63,14 +63,27 @@ Ext.define('alexzam.comp.Timer', {
 	    rad -= wid + space;
 	    this.drawSegments(12, 0.93, rad - wid, rad, 'mo');
 
-            wid = rad * 0.25;
+            wid = rad * 0.3;
 	    var text = this.surface.add({
                 type: 'text',
                 x: 0,
-                y: Math.floor(wid/2),
+                y: -Math.floor(wid/2),
                 text: "000 000000",
                 font: ''+wid+" Digital",
                 group: ['all', 'time']
+            });
+            this.surface.render(text);
+            text.setAttributes({'text-anchor': 'middle'}, true);
+            text.addCls('text');
+
+            wid = rad * 0.2;
+            text = this.surface.add({
+                type: 'text',
+                x: 0,
+                y: Math.floor(wid/2),
+                text: this.config.name.substr(0,10),
+                font: ''+wid+" Digital",
+                group: ['all', 'tname']
             });
             this.surface.render(text);
             text.setAttributes({'text-anchor': 'middle'}, true);
