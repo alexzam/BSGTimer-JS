@@ -61,26 +61,43 @@
 	}
 </style>
 <script>
-var targetDate = new Date(2011, 8, 14, 20, 00, 0, 0);
-var targetDate2 = new Date(2011, 8, 14, 15, 30, 0, 0);
-
 var manager = {
 	onBtAdd:function(){
 		var form = Ext.getCmp('frmAdd');
 		var data = form.getForm().getFieldValues();
 
-		var dat = data.newdate;
-		dat.setHours(data.newtime.getHours());
-		dat.setMinutes(data.newtime.getMinutes());
+		var func;
+		var funcPar;
+		if(data.typ == 'tt'){
+			func = 'totime';
+			funcPar = data.newdate;
+			funcPar.setHours(data.newtime.getHours());
+			funcPar.setMinutes(data.newtime.getMinutes());
+		} else {
+			func = 'timer';
+			funcPar = 1000 * (data.timer.getSeconds() + 60 * (data.timer.getMinutes() + 60 * data.timer.getHours()));
+		}
 
 		var newt = Ext.create('alexzam.comp.Timer', {
                         width:300,
 			height:300,
-		        timeFunc: 'totime',
-                        timeFuncParam: dat,
-		        name:'sometimer'
+		        timeFunc: func,
+                        timeFuncParam: funcPar,
+		        name:data.name
 		});
 		Ext.getCmp('ground').add(newt);
+	},
+
+	onRadioChange:function(me, newval){
+		if(newval.typ == 'tt'){
+			Ext.getCmp('tbNewdate').show();
+			Ext.getCmp('tbNewtime').show();
+			Ext.getCmp('tbTimer').hide();
+		} else {
+			Ext.getCmp('tbNewdate').hide();
+			Ext.getCmp('tbNewtime').hide();
+			Ext.getCmp('tbTimer').show();
+		}
 	}
 };
 
@@ -107,7 +124,10 @@ Ext.create('Ext.container.Viewport', {
 					items:[
 						{boxLabel:'To time', name:'typ', inputValue:'tt', checked:true},
 						{boxLabel:'Timer', name:'typ', inputValue:'ti'}
-					]
+					],
+					listeners:{
+						change:manager.onRadioChange
+					}
 				},
 				{
 					xtype:'datefield',
@@ -117,7 +137,8 @@ Ext.create('Ext.container.Viewport', {
 					minValue:new Date(),
 					value:new Date(),
 					anchor:'100%',
-					format:'d.m.Y'
+					format:'d.m.Y',
+					id:'tbNewdate'
 				},
 				{
 					xtype: 'timefield',
@@ -125,7 +146,26 @@ Ext.create('Ext.container.Viewport', {
 					hideLabel: true,
 					increment: 30,
 					anchor: '100%',
-					format:'H:i'
+					format:'H:i',
+					id:'tbNewtime'
+				},
+				{
+					xtype: 'timefield',
+					name: 'timer',
+					fieldLabel: 'Time amount',
+					labelAlign:'top',
+					increment: 10,
+					anchor: '100%',
+					format:'H:i:s',
+					id:'tbTimer',
+					hidden:true
+				},
+				{
+					xtype:'textfield',
+					anchor: '100%',
+					fieldLabel:'Name',
+					labelAlign:'top',
+					name:'name'
 				},
 				{
 					xtype:'button',
@@ -140,28 +180,7 @@ Ext.create('Ext.container.Viewport', {
 			region: 'center',
                         cls:'ground',
 			id:'ground',
-                        border:false,
-			items: [
-				{
-					xtype: 'aztimer',
-                		        width:300,
-					height:300,
-                		        id:'t1',
-		                        timeFunc: 'totime',
-                		        timeFuncParam: targetDate,
-		                        name:'ten minutes'
-				},
-				{
-					xtype: 'aztimer',
-                		        width:300,
-					height:300,
-                		        id:'t2',
-		                        timeFunc: 'totime',
-                		        timeFuncParam: targetDate2,
-		                        name:'end of day'
-				}
-
-			]
+                        border:false
 		}
 	]
 });
