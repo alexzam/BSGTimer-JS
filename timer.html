@@ -1,193 +1,208 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <style>
+        @font-face
+        {
+            font-family: Digital;
+            src: url(DigifaceRegular.ttf);
+        }
+        .sector {
+        }
+
+        .text {
+            fill: #F5B800;
+        }
+        
+        .bt-close-active{
+            fill: #F5B800;
+            cursor:pointer;
+        }
+
+        .inact {
+            fill: none !important;
+        }
+
+        .s {
+            fill: #A42F00;
+        }
+
+        .m {
+            fill: #E68F00;
+        }
+
+        .h {
+            fill: #F5B800;
+        }
+
+        .d {
+            fill: #FBF400;
+        }
+
+        .mo {
+            fill: #F7FF55;
+        }
+
+        .ground .x-panel-body {
+            background-color: black;
+        }
+
+        #clk {
+            width: 700px;
+            height: 700px;
+        }
+
+        #settings, #openbut {
+            color: #F5B800;
+            border: 1px solid #F5B800;
+        }
+
+        #settings {
+            width: 200px;
+            display: none;
+        }
+
+        #openbut {
+            width: 15px;
+            height: 15px;
+            font-size: 10px;
+            line-height: 15px;
+            text-align: center;
+            cursor: pointer;
+        }
+    </style>
+
+    <link rel="stylesheet" type="text/css" href="js/resources/css/ext-all-access.css">
+    <script type="text/javascript" src="js/ext-all-debug-w-comments.js"></script>
+    <script type="text/javascript" src="js/Timer.js"></script>
+</head>
 <body>
-<link rel="stylesheet" type="text/css" href="js/resources/css/ext-all-access.css">
-<script type="text/javascript" src="js/ext-all-debug-w-comments.js"></script>
-<script type="text/javascript" src="js/Timer.js"></script>
 
-<style>
-	@font-face{
-		font-family: Digital;
-		src: url(DigifaceRegular.ttf);
-	}
-	.sector{
-		/*stroke:white;
-		strokeWidth:1;*/
-	}
-	.text{
-		fill:#F5B800;
-	}
-
-	.inact{
-		fill:none !important;
-	}
-	.s{
-		fill:#A42F00;
-	}
-	.m{
-		fill:#E68F00;
-	}
-	.h{
-		fill:#F5B800;
-	}
-	.d{
-		fill:#FBF400;
-	}
-	.mo{
-		fill:#F7FF55;
-	}
-	.ground .x-panel-body{
-		background-color:black;
-	}
-	#clk{
-		width:700px;
-		height:700px;
-	}
-	#settings, #openbut{
-		color:#F5B800;
-		border:1px solid #F5B800;
-	}
-	#settings{
-		width:200px;
-		display:none;
-	}
-	#openbut{
-		width:15px;
-		height:15px;
-		font-size:10px;
-		line-height:15px;
-		text-align:center;
-		cursor:pointer;
-	}
-</style>
 <script>
-var manager = {
-	onBtAdd:function(){
-		var form = Ext.getCmp('frmAdd');
-		var data = form.getForm().getFieldValues();
+    var manager = {
+        onBtAdd:function() {
+            var form = Ext.getCmp('frmAdd');
+            var data = form.getForm().getFieldValues();
 
-		var func;
-		var funcPar;
-		if(data.typ == 'tt'){
-			func = 'totime';
-			funcPar = data.newdate;
-			funcPar.setHours(data.newtime.getHours());
-			funcPar.setMinutes(data.newtime.getMinutes());
-		} else {
-			func = 'timer';
-			funcPar = 1000 * (data.timer.getSeconds() + 60 * (data.timer.getMinutes() + 60 * data.timer.getHours()));
-		}
+            var func;
+            var funcPar;
+            if (data.typ == 'tt') {
+                func = 'totime';
+                funcPar = data.newdate;
+                funcPar.setHours(data.newtime.getHours());
+                funcPar.setMinutes(data.newtime.getMinutes());
+            } else {
+                func = 'timer';
+                funcPar = 1000 * (data.timer.getSeconds() + 60 * (data.timer.getMinutes() + 60 * data.timer.getHours()));
+            }
 
-		var newt = Ext.create('alexzam.comp.Timer', {
-                        width:300,
-			height:300,
-		        timeFunc: func,
-                        timeFuncParam: funcPar,
-		        name:data.name
-		});
-		Ext.getCmp('ground').add(newt);
-	},
+            var newt = Ext.create('alexzam.comp.Timer', {
+                width:300,
+                height:300,
+                timeFunc: func,
+                timeFuncParam: funcPar,
+                name:data.name
+            });
+            Ext.getCmp('ground').add(newt);
+        },
 
-	onRadioChange:function(me, newval){
-		if(newval.typ == 'tt'){
-			Ext.getCmp('tbNewdate').show();
-			Ext.getCmp('tbNewtime').show();
-			Ext.getCmp('tbTimer').hide();
-		} else {
-			Ext.getCmp('tbNewdate').hide();
-			Ext.getCmp('tbNewtime').hide();
-			Ext.getCmp('tbTimer').show();
-		}
-	}
-};
+        onRadioChange:function(me, newval) {
+            if (newval.typ == 'tt') {
+                Ext.getCmp('tbNewdate').show();
+                Ext.getCmp('tbNewtime').show();
+                Ext.getCmp('tbTimer').hide();
+            } else {
+                Ext.getCmp('tbNewdate').hide();
+                Ext.getCmp('tbNewtime').hide();
+                Ext.getCmp('tbTimer').show();
+            }
+        }
+    };
 
-Ext.onReady(function(){
-Ext.create('Ext.container.Viewport', {
-    layout: 'border',
-	items:[
-		{
-			xtype: 'form',
-			region: 'east',
-			width: 100,
-			collapsible:true,
-			title: 'Add',
-			margins: '5 5 5 5',
-			id:'frmAdd',
-                        items: [
-				{
-					xtype:'radiogroup',
-					fieldLabel:'Type',
-					vertical:true,
-                                        anchor:'100%',
-					columns:[1.0],
-					labelAlign:'top',
-					items:[
-						{boxLabel:'To time', name:'typ', inputValue:'tt', checked:true},
-						{boxLabel:'Timer', name:'typ', inputValue:'ti'}
-					],
-					listeners:{
-						change:manager.onRadioChange
-					}
-				},
-				{
-					xtype:'datefield',
-					name:'newdate',
-					fieldLabel:'Time',
-					labelAlign:'top',
-					minValue:new Date(),
-					value:new Date(),
-					anchor:'100%',
-					format:'d.m.Y',
-					id:'tbNewdate'
-				},
-				{
-					xtype: 'timefield',
-					name: 'newtime',
-					hideLabel: true,
-					increment: 30,
-					anchor: '100%',
-					format:'H:i',
-					id:'tbNewtime'
-				},
-				{
-					xtype: 'timefield',
-					name: 'timer',
-					fieldLabel: 'Time amount',
-					labelAlign:'top',
-					increment: 10,
-					anchor: '100%',
-					format:'H:i:s',
-					id:'tbTimer',
-					hidden:true
-				},
-				{
-					xtype:'textfield',
-					anchor: '100%',
-					fieldLabel:'Name',
-					labelAlign:'top',
-					name:'name'
-				},
-				{
-					xtype:'button',
-					text:'Add',
-					anchor: '100%',
-					handler:manager.onBtAdd
-				}
-			]
-		},
-		{
-			xtype: 'panel',
-			region: 'center',
-                        cls:'ground',
-			id:'ground',
-                        border:false
-		}
-	]
-});
-});
-
-/*
-*/
+    Ext.onReady(function() {
+        Ext.create('Ext.container.Viewport', {
+            layout: 'border',
+            items:[
+                {
+                    xtype: 'form',
+                    region: 'east',
+                    width: 100,
+                    collapsible:true,
+                    title: 'Add',
+                    margins: '5 5 5 5',
+                    id:'frmAdd',
+                    items: [
+                        {
+                            xtype:'radiogroup',
+                            fieldLabel:'Type',
+                            vertical:true,
+                            anchor:'100%',
+                            columns:[1.0],
+                            labelAlign:'top',
+                            items:[
+                                {boxLabel:'To time', name:'typ', inputValue:'tt', checked:true},
+                                {boxLabel:'Timer', name:'typ', inputValue:'ti'}
+                            ],
+                            listeners:{
+                                change:manager.onRadioChange
+                            }
+                        },
+                        {
+                            xtype:'datefield',
+                            name:'newdate',
+                            fieldLabel:'Time',
+                            labelAlign:'top',
+                            minValue:new Date(),
+                            value:new Date(),
+                            anchor:'100%',
+                            format:'d.m.Y',
+                            id:'tbNewdate'
+                        },
+                        {
+                            xtype: 'timefield',
+                            name: 'newtime',
+                            hideLabel: true,
+                            increment: 30,
+                            anchor: '100%',
+                            format:'H:i',
+                            id:'tbNewtime'
+                        },
+                        {
+                            xtype: 'timefield',
+                            name: 'timer',
+                            fieldLabel: 'Time amount',
+                            labelAlign:'top',
+                            increment: 10,
+                            anchor: '100%',
+                            format:'H:i:s',
+                            id:'tbTimer',
+                            hidden:true
+                        },
+                        {
+                            xtype:'textfield',
+                            anchor: '100%',
+                            fieldLabel:'Name',
+                            labelAlign:'top',
+                            name:'name'
+                        },
+                        {
+                            xtype:'button',
+                            text:'Add',
+                            anchor: '100%',
+                            handler:manager.onBtAdd
+                        }
+                    ]
+                },
+                {
+                    xtype: 'panel',
+                    region: 'center',
+                    cls:'ground',
+                    id:'ground',
+                    border:false
+                }
+            ]
+        });
+    });
 </script>
 
 </body>
