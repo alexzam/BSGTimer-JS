@@ -245,11 +245,16 @@ Ext.define('alexzam.comp.Timer', {
         var by = box.y;
 
         var clicked = (x >= bx && y >= by && x <= bx + box.width && y <= by + box.height);
-        if(clicked) this.remove();
+        if (clicked) this.remove();
     },
-    remove:function(){
+    remove:function() {
         alexzam.comp.TimerManager.removeTimer(this);
         this.destroy();
+    },
+    getState:function(){
+        var state = this.initialConfig;
+        if(Ext.isDate(state.timeFuncParam)) state.timeFuncParam = state.timeFuncParam.getTime();
+        return state;
     }
 });
 
@@ -265,10 +270,12 @@ Ext.define('alexzam.comp.TimerManager', {
             alexzam.comp.TimerManager.running = true;
             alexzam.comp.TimerManager.updateTimers();
         }
+        alexzam.comp.TimerManager.saveState();
     },
 
     removeTimer: function(timer) {
         Ext.Array.remove(alexzam.comp.TimerManager.timers, timer);
+        alexzam.comp.TimerManager.saveState();
     },
 
     updateTimers:function() {
@@ -277,6 +284,28 @@ Ext.define('alexzam.comp.TimerManager', {
             alexzam.comp.TimerManager.timers[i].updateTimer();
         }
         setTimeout(alexzam.comp.TimerManager.updateTimers, 1000);
-    }
+    },
 
+    saveState:function() {
+        var storage = window.localStorage;
+        var state = [];
+
+        Ext.Array.forEach(alexzam.comp.TimerManager.timers, function(item){
+            state.push(item.getState());
+        });
+        storage.setItem('alexzam.comp.TimerManager', Ext.JSON.encode(state));
+    },
+
+    loadState:function(){
+        var storage = window.localStorage;
+        var state = Ext.JSON.decode(storage.getItem('alexzam.comp.TimerManager'));
+        var timers = [];
+
+        Ext.Array.forEach(state, function(item){
+            if(item.timeFunc == 'totime') item.timeFuncParam = new Date(item.timeFuncParam);
+            timers.push(Ext.create('alexzam.comp.Timer', item));
+        });
+
+        return timers;
+    }
 });

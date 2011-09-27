@@ -202,6 +202,10 @@
                 }
             ]
         });
+
+        var timers = alexzam.comp.TimerManager.loadState();
+        var ground = Ext.getCmp('ground');
+        Ext.Array.forEach(timers, function(i){ground.add(i)});
     });
 </script>
 
