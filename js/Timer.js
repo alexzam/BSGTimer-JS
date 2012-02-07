@@ -205,3 +205,4 @@ Ext.define('alexzam.comp.TimerManager', {
     }
 
 });
+	
